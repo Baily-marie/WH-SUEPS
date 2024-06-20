@@ -77,8 +77,8 @@ def muon_hists(events,etas,hists):
 
 	# Select based on trigger
 	mu = events["Muon_pt"]
-	evs = mu[muon_quality_check & eta_split]
-	tr_evs = evs[triggerSingleMuon]
+	tr_evs = evs[muon_quality_check & triggerSingleMuon]
+	evs = mu[eta_split]
 	
 	#Fill histograms
 	for ev in evs:
@@ -111,12 +111,12 @@ eta1_effs=ROOT.TEfficiency(eta1_mu_filthist,eta1_mu_totalhist)
 eta2_effs=ROOT.TEfficiency(eta2_mu_filthist,eta2_mu_totalhist)
 eta3_effs=ROOT.TEfficiency(eta3_mu_filthist,eta3_mu_totalhist)
 c1 = ROOT.TCanvas ("canvas","",800,600)
-
+'''PROB NOT NECESSARY
 # Get overall Efficiency:
 mu_eff=mu_filthist.Clone("Overall Efficiency")
 mu_eff.SetTitle("Overall Efficiency")
 mu_eff.Sumw2()
-mu_eff.Divide(mu_totalhist)
+mu_eff.Divide(mu_totalhist)'''
 
 # Creates Efficiency Plot w legend
 eta1_effs.SetTitle("Muon Trigger Efficiency in bins of pT;Muon pT [GeV];Efficiency")
