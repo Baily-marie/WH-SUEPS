@@ -86,7 +86,6 @@ else:
 # Gets relevant variables from file
 def Events(f):
     evs=f['Events'].arrays(['HLT_IsoMu27',
-                'HLT_IsoMu24',
                 'HLT_Mu50',
                 'Muon_pt',
                 'Muon_eta',
@@ -110,14 +109,14 @@ mu_totalhist=ROOT.TH1D("total_events","Total Events",len(mu_bin_edges)-1,mu_bin_
 mu_filthist=ROOT.TH1D("filt_events","Filtered Events",len(mu_bin_edges)-1,mu_bin_edges)
 
 # Split into three regions of eta
-eta1_mu_totalhist=ROOT.TH1D("total_events","Total Events",len(mu_bin_edges)-1,mu_bin_edges)
-eta1_mu_filthist=ROOT.TH1D("filt_events","Filtered Events",len(mu_bin_edges)-1,mu_bin_edges)
-eta2_mu_totalhist=ROOT.TH1D("total_events","Total Events",len(mu_bin_edges)-1,mu_bin_edges)
-eta2_mu_filthist=ROOT.TH1D("filt_events","Filtered Events",len(mu_bin_edges)-1,mu_bin_edges)
-eta3_mu_totalhist=ROOT.TH1D("total_events","Total Events",len(mu_bin_edges)-1,mu_bin_edges)
-eta3_mu_filthist=ROOT.TH1D("filt_events","Filtered Events",len(mu_bin_edges)-1,mu_bin_edges)
-# Function for filling the histograms
+eta1_mu_totalhist=ROOT.TH1D("eta1_total_events","Total Events |eta| < 0.9",len(mu_bin_edges)-1,mu_bin_edges)
+eta1_mu_filthist=ROOT.TH1D("eta1_filt_events","Filtered Events |eta| < 0.9",len(mu_bin_edges)-1,mu_bin_edges)
+eta2_mu_totalhist=ROOT.TH1D("eta2_total_events","Total Events 0.9 < |eta| < 2.1",len(mu_bin_edges)-1,mu_bin_edges)
+eta2_mu_filthist=ROOT.TH1D("eta2_filt_events","Filtered Events 0.9 < |eta| < 2.1",len(mu_bin_edges)-1,mu_bin_edges)
+eta3_mu_totalhist=ROOT.TH1D("eta3_total_events","Total Events 2.1 < |eta| < 2.4",len(mu_bin_edges)-1,mu_bin_edges)
+eta3_mu_filthist=ROOT.TH1D("eta3_filt_events","Filtered Events 2.1 < |eta| < 2.4",len(mu_bin_edges)-1,mu_bin_edges)
 
+# Function for filling the histograms
 def muon_hists(events,etas,hists):
     totalhist=hists[0]
     filthist=hists[1]
@@ -126,15 +125,14 @@ def muon_hists(events,etas,hists):
     # trigger
     triggerSingleMuon = (
         events["HLT_IsoMu27"]
-        | events["HLT_IsoMu24"]
         | events["HLT_Mu50"]
         )
     # quality requirements for muons
     muon_quality_check = ((events["Muon_looseId"])
                 & (events["Muon_pt"] > 10)
                 & (np.abs(events["Muon_eta"]) < 2.4)
-                & (np.abs(events["Muon_dz"]) < 0.1)
-                & (np.abs(events["Muon_dxy"]) < 0.02)
+                & (np.abs(events["Muon_dz"]) <= 0.1)
+                & (np.abs(events["Muon_dxy"]) <= 0.02)
                 & (events["Muon_pfRelIso03_chg"] < 0.25)
                 & (events["Muon_pfRelIso03_all"] < 0.25)
             )
@@ -172,17 +170,13 @@ c1 = ROOT.TCanvas ("canvas","",800,600)
 
 # Get overall Efficiency:
 mu_eff=mu_filthist.Clone(sample_name)
-mu_eff.SetTitle("Efficiency")
-mu_eff.Sumw2()
-mu_eff.Divide(mu_totalhist)
 
 # Creates Efficiency Plot w legend
-
 eta1_effs.SetTitle("Muon Trigger Efficiency in bins of pT;Muon pT [GeV];Efficiency")
 legend=ROOT.TLegend(0.5,0.1,0.9,0.4)
-legend.AddEntry(eta1_effs,"|#eta|<1.0","l")
-legend.AddEntry(eta2_effs,"1.0<|#eta|<1.5","l")
-legend.AddEntry(eta3_effs,"1.5<|#eta|<2.4","l")
+legend.AddEntry(eta1_effs,"|#eta|<0.9","l")
+legend.AddEntry(eta2_effs,"0.9<|#eta|<2.1","l")
+legend.AddEntry(eta3_effs,"2.1<|#eta|<2.4","l")
 legend.AddEntry(ROOT.nullptr, "T= "+temp+" GeV, "+year,"")
 legend.AddEntry(ROOT.nullptr,"SUEP decay type: "+decay_type,"")
 legend.AddEntry(ROOT.nullptr,"Dark meson mass = "+ md,"")
