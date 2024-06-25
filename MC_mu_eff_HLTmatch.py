@@ -54,14 +54,8 @@ def Events(f):
                 'Muon_looseId'])
 	return evs
 
-#Calculating DeltaR
-def deltaR2(eta1, phi1, eta2, phi2):
-	deta = eta1 - eta2
-        dphi = phi1- phi2
-        dphi = np.mod(dphi + np.pi, 2*np.pi) - np.pi
-        return deta**2 + dphi**2
 
-#checking for HLT matching
+
 def isHLTMatched(events, muons):
         trigObj = ak.zip({
             "pt": events.TrigObj_pt,
@@ -77,9 +71,17 @@ def isHLTMatched(events, muons):
                                   | (trigObj.filterBits & 8)
                                   | (trigObj.filterBits & 1024))]
 
+        #Calculating DeltaR
+        def deltaR2(eta1, phi1, eta2, phi2):
+	    deta = eta1 - eta2
+            dphi = phi1- phi2
+            dphi = np.mod(dphi + np.pi, 2*np.pi) - np.pi
+        return deta**2 + dphi**2
+
         toMatch1mu, trigObjSingleMu = ak.unzip(ak.cartesian([muons, trigObjSingleMu], axis = 1, nested = True))
         alldr2 = deltaR2(toMatch1mu.eta, toMatch1mu.phi, trigObjSingleMu.eta, trigObjSingleMu.phi)
-        match1mu = ak.sum(ak.where(ak.min(alldr2, axis=2) < 0.1, True, False), axis = 1) >= 1
+        min_dr2 = ak.min(alldr2, axis = 2)
+        match1El = ak.any(min_dr2 < 0.1, axis = 1)
         return match1mu
 
 
