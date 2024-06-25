@@ -102,7 +102,7 @@ def muon_hists(events,etas,hists):
                 & (np.abs(events["Muon_dz"]) <= 0.1)
                 & (np.abs(events["Muon_dxy"]) <= 0.02)
                 & (events["Muon_pfRelIso03_all"] < 0.25)
-                & (events["Muon_pfRelIso03_chg"] < 0.25)
+                & (events["Muon_pfRelIso03_chg"] < 0.25))
 
 	# cut on eta
 	eta_split=((np.abs(events["Muon_eta"]) >= eta_min) & (np.abs(events["Muon_eta"]) < eta_max ))
