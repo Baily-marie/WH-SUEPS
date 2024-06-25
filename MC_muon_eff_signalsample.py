@@ -93,7 +93,7 @@ def Events(f):
                 'Muon_dxy',
                 'Muon_pfRelIso03_all',
                 'Muon_pfRelIso03_chg',
-                'Muon_looseId'])
+                'Muon_mediumId'])
 
     return evs
 
@@ -128,7 +128,7 @@ def muon_hists(events,etas,hists):
         | events["HLT_Mu50"]
         )
     # quality requirements for muons
-    muon_quality_check = ((events["Muon_looseId"])
+    muon_quality_check = ((events["Muon_mediumId"])
                 & (events["Muon_pt"] > 10)
                 & (np.abs(events["Muon_eta"]) < 2.4)
                 & (np.abs(events["Muon_dz"]) <= 0.1)
