@@ -1,3 +1,4 @@
+#CURRENTLY ADDING HLT ONLINE/OFFLINE MATCHING, SEE ORIGINAL IN GIT OR TERMINAL
 import os
 import argparse
 import uproot
@@ -91,9 +92,8 @@ def Events(f):
                 'Muon_eta',
                 'Muon_dz',
                 'Muon_dxy',
-                'Muon_pfRelIso03_all',
-                'Muon_pfRelIso03_chg',
-                'Muon_mediumId'])
+                'Muon_pfIsoId',
+                'Muon_tightId'])
 
     return evs
 
@@ -127,15 +127,15 @@ def muon_hists(events,etas,hists):
         events["HLT_IsoMu27"]
         | events["HLT_Mu50"]
         )
-    # quality requirements for muons
-    muon_quality_check = ((events["Muon_mediumId"])
-                & (events["Muon_pt"] > 10)
+    # muon_quality_check
+    muon_quality_check = ((events["Muon_tightId"])
                 & (np.abs(events["Muon_eta"]) < 2.4)
-                & (np.abs(events["Muon_dz"]) <= 0.1)
+                & (np.abs(events["Muon_dz"]) <= 0.05)
                 & (np.abs(events["Muon_dxy"]) <= 0.02)
-                & (events["Muon_pfRelIso03_chg"] < 0.25)
-                & (events["Muon_pfRelIso03_all"] < 0.25)
+                & (events["Muon_pfIsoId"] >= 5)
             )
+ 
+
     # cut on eta
     eta_split=(
         (np.abs(events["Muon_eta"]) >= eta_min)
@@ -184,18 +184,39 @@ legend.SetTextColor(ROOT.kBlack)
 legend.SetTextFont(42)
 legend.SetTextSize(0.03)
 
-# Draw plot
+# Draw plot                                                                                                                                                                               
+eta1_effs.Draw("AP")
 
-eta1_effs.Draw()
-eta2_effs.SetLineColor(ROOT.kRed)
-eta2_effs.Draw("same")
-eta3_effs.SetLineColor(ROOT.kBlue)
-eta3_effs.Draw("same")
-legend.Draw("same")
+# Update canvas                                                                                                                                                                           
 c1.Update()
+
+# Get painted graph and set y-axis range                                                                                                                                                  
+efficiency = eta1_effs
+graph = efficiency.GetPaintedGraph()
+graph.SetMinimum(0)
+
+# Update canvas again                                                                                                                                                                     
+ROOT.gPad.Update()
+
+# Draw legend                                                                                                                                                                             
+legend.Draw()
+c1.Update()
+efficiency = eta1_effs
+efficiency.Draw()
+ROOT.gPad.Update()
+graph = efficiency.GetPaintedGraph()
+graph.SetMinimum(0)
+
+ROOT.gPad.Update()
+legend.Draw()
+c1.Update()
+eta2_effs.Draw("P same")
+eta2_effs.SetLineColor(ROOT.kRed)
+eta3_effs.Draw("P same")
+eta3_effs.SetLineColor(ROOT.kBlue)
+
 # Saves plot to pdf
 c1.SaveAs(folder+sample_name+"_Efficiency.pdf")
-
 
 # Saves overall efficiency
 root_file = ROOT.TFile(output_file,"UPDATE")
