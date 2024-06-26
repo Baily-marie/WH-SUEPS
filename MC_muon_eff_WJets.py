@@ -48,9 +48,8 @@ def Events(f):
                 'Muon_eta',
                 'Muon_dz',
                 'Muon_dxy',
-                'Muon_pfRelIso03_all',
-                'Muon_pfRelIso03_chg',
-                'Muon_mediumId'])
+                'Muon_pfIsoId',
+                'Muon_tightId'])
         return evs
 
 
@@ -66,13 +65,11 @@ def muon_hists(events,etas,hists):
         triggerSingleMuon = (events["HLT_IsoMu27"] | events["HLT_Mu50"])
 
         # quality requirements for muons
-        muon_quality_check = ((events["Muon_mediumId"])
-                & (events["Muon_pt"] >= 10)
+        muon_quality_check = ((events["Muon_tightId"])
                 & (np.abs(events["Muon_eta"]) < 2.4)
-                & (np.abs(events["Muon_dz"]) <= 0.1)
+                & (np.abs(events["Muon_dz"]) <= 0.05)
                 & (np.abs(events["Muon_dxy"]) <= 0.02)
-                & (events["Muon_pfRelIso03_all"] < 0.25)
-                & (events["Muon_pfRelIso03_chg"] < 0.25))
+                & (events["Muon_pfIsoId"] >= 5))
 
         # cut on eta
         eta_split=((np.abs(events["Muon_eta"]) >= eta_min) & (np.abs(events["Muon_eta"]) < eta_max ))
