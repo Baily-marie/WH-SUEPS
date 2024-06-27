@@ -1,4 +1,3 @@
-#CURRENTLY ADDING HLT ONLINE/OFFLINE MATCHING, SEE ORIGINAL IN GIT OR TERMINAL
 import os
 import argparse
 import uproot
