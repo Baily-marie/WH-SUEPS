@@ -141,14 +141,13 @@ def isHLTMatched(events, goodMuons):
             }, with_name = "Momentum4D")
 
     # Defining the conditions for filtering triggers
-    filterbits1 = ((events['TrigObj_filterBits'] & 2) == 2) 
-    filterbits2 = ((events['TrigObj_filterBits'] & 8) == 8)
-    filterbits3 = ((events['TrigObj_filterBits'] & 1024) == 1024)
+    filterbits1 = (((events['TrigObj_filterBits'] & 2) == 2) & (events['TrigObj_filterBits'] & 8) == 8) & (events['HLT_IsoMu27']))
+    filterbits2 = (((events['TrigObj_filterBits'] & 1024) == 1024) & (events['HLT_Mu50']))
 
     trigObjSingleMu = trigObj[((abs(trigObj.id) == 13)
                               #& (trigObj.pt >= 10)
                               & (abs(trigObj.eta) < 2.4)
-                              & ((filterbits1 & filterbits2) | filterbits3))]
+                              & ((filterbits1 | filterbits2)))]
 
     #Computes deltaR2
     def deltaR2(eta1, phi1, eta2, phi2):
@@ -161,7 +160,7 @@ def isHLTMatched(events, goodMuons):
     toMatch1Mu, trigObjSingleMu = ak.unzip(ak.cartesian([goodMuons, trigObjSingleMu], axis = 1, nested = True))
     alldr2 = deltaR2(toMatch1Mu.eta, toMatch1Mu.phi, trigObjSingleMu.eta, trigObjSingleMu.phi)
     min_dr2 = ak.min(alldr2, axis = 2)
-    match1Mu = ak.any(min_dr2 < 0.1, axis = 1)
+    match1Mu = (min_dr2 < 0.1)
 
     return match1Mu
 
