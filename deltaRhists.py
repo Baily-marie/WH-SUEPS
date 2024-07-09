@@ -142,13 +142,13 @@ def isHLTMatched(events, offlineMuons):
             }, with_name = "Momentum4D")
 
     # Defining the conditions for filtering triggers
-    filterbits1 = (((events['TrigObj_filterBits'] & 2) == 2) & (events['TrigObj_filterBits'] & 8) == 8) & (events['HLT_IsoMu27']))
+    filterbits1 = (((events['TrigObj_filterBits'] & 2) == 2) & ((events['TrigObj_filterBits'] & 8) == 8) & (events['HLT_IsoMu27']))
     filterbits2 = (((events['TrigObj_filterBits'] & 1024) == 1024) & (events['HLT_Mu50']))
 
     trigObjSingleMu = trigObj[((abs(trigObj.id) == 13)
                               & (trigObj.pt >= 10)
                               & (abs(trigObj.eta) < 2.4)
-                              & ((filterbits1 | filterbits2))]
+                              & (filterbits1 | filterbits2))]
 
     # Computes deltaR2
     def deltaR2(eta1, phi1, eta2, phi2):
@@ -167,41 +167,39 @@ def isHLTMatched(events, offlineMuons):
 
 # Define eta bins
 eta_bins = [[0.0, 0.9], [0.9, 2.1], [2.1, 2.4]]
-colors = [ROOT.kBlack, ROOT.kRed, ROOT.kBlue]
 
-c1 = ROOT.TCanvas("c1", "Muon pt vs Min DeltaR", 800, 600)
-legend = ROOT.TLegend(0.5, 0.6, 0.9, 0.9)
-legend.AddEntry(ROOT.nullptr, "T = " + temp + "GeV, " + year,"")
-legend.AddEntry(ROOT.nullptr, "SUEP decay type: " + decay_type,"")
-legend.AddEntry(ROOT.nullptr, "Dark meson mass = " + md,"")
-legend.SetTextColor(ROOT.kBlack)
-legend.SetTextFont(42)
-legend.SetTextSize(0.03)
-graphs = []
 
-for i, (eta_min, eta_max) in enumerate(eta_bins):
-    eta_mask = (abs(offlineMuons.eta) >= eta_min) & (abs(offlineMuons.eta) < eta_max)
-    muons_eta_bin = offlineMuons[eta_mask]
-    match1Mu, min_dr2 = isHLTMatched(evs, muons_eta_bin)
+# Create TH2F
 
-    matched_pts = ak.flatten(muons_eta_bin[match1Mu].pt).to_numpy()
-    min_deltaRs = np.sqrt(ak.flatten(min_dr2[match1Mu]).to_numpy())
 
-    graph = ROOT.TGraph(len(matched_pts), array('d', matched_pts), array('d', min_deltaRs))
-    graph.SetMarkerStyle(20)
-    graph.SetMarkerColor(colors[i])
-    graph.SetLineColor(colors[i])
-    graphs.append(graph)
+th2_hist = ROOT.TH2F("Muon_pt_vs_minDeltaR", "Muon pT vs Min DeltaR;Muon pT [GeV];Min DeltaR",
+                     100, 0, 200, 100, 0, 0.5)
 
-    legend.AddEntry(graph, f"{eta_min}<|#eta|<{eta_max}", "l")
+# Fill the histogram
 
-graphs[0].SetTitle("Muon pt vs Min DeltaR;Muon pt [GeV];Min DeltaR")
-graphs[0].Draw("AP")
-for graph in graphs[1:]
-:
-    graph.Draw("P same")
 
-legend.Draw()
+match1Mu, min_dr2 = isHLTMatched(evs, offlineMuons)
+
+matched_pts = ak.flatten(offlineMuons[match1Mu].pt).to_numpy()
+min_deltaRs = (ak.flatten(min_dr2[match1Mu]).to_numpy())
+
+for pt, deltaR in zip(matched_pts, min_deltaRs):
+    th2_hist.Fill(pt, deltaR)
+
+# Draw and save as PNG
+
+
+c1 = ROOT.TCanvas("c1", "Muon pT vs Min DeltaR", 800, 600)
+th2_hist.Draw("COLZ")
+th2_hist.SetStats(0)
 c1.SaveAs(sample_name + "_pt_vs_minDeltaR.pdf")
 
-print("Sample " + sample_name + " processed")
+# Save to ROOT file
+
+
+output_root_file = ROOT.TFile(output_file, "RECREATE")
+th2_hist.Write()
+output_root_file.Close()
+
+print("Sample " + sample_name + " processed and histogram saved to " + output_file)
+print("Histogram also saved as " + sample_name + "_pt_vs_minDeltaR.pdf")
