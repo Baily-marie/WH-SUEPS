@@ -11,7 +11,7 @@ print()
 ########   customization area #########
 interval = 5  # number files to be processed in a single job, take care to split your file so that you run on all files. The last job might be with smaller number of files (the ones that remain).
 queue = "longlunch"
-tag = sys.argv[1] #Muon or Electron
+tag = str(sys.argv[1]) #Muon or Electron
 NumberOfJobs = -1
 doSubmit = True
 isdata = sys.argv[2]  # mc or data
@@ -48,10 +48,12 @@ for x in range(1, int(NumberOfJobs) + 1):
         fout.write("echo 'START---------------'\n")
         fout.write("echo 'WORKDIR ' ${PWD}\n")
         fout.write("export HOME=$PWD\n")
-        fout.write("source /afs/cern.ch/cms/cmsset_default.sh\n")
+        fout.write("source /cvmfs/cms.cern.ch/cmsset_default.sh\n")
+        fout.write("cmsrel CMSSW_13_3_3\n")
+        fout.write("cd CMSSW_13_3_3/src\n")
         fout.write("cmsenv\n")
         fout.write("cd -\n")
-        fout.write(f"python3 /eos/home-z/zdemirag/forWH/doTriggerEff.py {tag} {isdata} {eta} {output}/output_{x}.root {' '.join(jobFiles)}\n")
+        fout.write(f"python3 /eos/home-z/zdemirag/forWH/doTriggerEff.py {tag} {isdata} {eta} output_{x}.root {' '.join(jobFiles)}\n")
         fout.write("echo 'STOP---------------'\n")
         fout.write("echo\n")
         fout.write("echo\n")
