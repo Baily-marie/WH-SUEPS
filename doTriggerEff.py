@@ -13,12 +13,18 @@ data = sys.argv[2] # mc or data
 #Eta option: Eta or noEta
 etaOption = sys.argv[3]
 
-lep1pt_bin_edges = array('d',[0,2,4,6,8,10,12,
-                         14,16,18,20,22,
-                         24,26,28,30,32,
-                         34,36,38,40,50,
-                         60,70,80,90,100,
-                         120,140,160,180,200])
+
+lep1pt_bin_edges = array('d',[0, 2, 4, 6, 8, 10, 12,
+                              14, 16, 18, 20, 22,
+                              24, 26, 28, 30, 32,
+                              34, 36, 38, 40, 50,
+                              60, 70, 80, 90, 100,
+                              120, 140, 160, 180, 200])      
+
+
+
+
+#lep1pt_bin_edges = array('d', [0,2,4,6,8,10,12,14,16,18,20,22,24,26,28,30,32,34,36,38,40,50,60,70,80,90,100,120,140,160,180,200,220,240,260,280,300,320,340,360,380,400])
 
 # Lepton-specific configurations
 if lepton == "Muon":
@@ -58,6 +64,7 @@ else:  # Electron-specific configurations
     }
 
     # Update histBins dictionary
+
     histBins = {
         "lep1pt": lep1pt_bin_edges,
         "MET": [30, 0, 300],
@@ -109,8 +116,7 @@ def passes_lepton_cuts(ev, lepton, leptonIndex):
             and abs(ev.Muon_eta[leptonIndex]) < 2.4
             and abs(ev.Muon_dz[leptonIndex]) <= 0.05
             and abs(ev.Muon_dxy[leptonIndex]) <= 0.02
-            and ev.Muon_pfIsoId[leptonIndex] >= 5
-        )
+            and ev.Muon_pfIsoId[leptonIndex] >= 5)
     else:
         return (
             ev.Electron_cutBased[leptonIndex] >= 2
@@ -118,8 +124,17 @@ def passes_lepton_cuts(ev, lepton, leptonIndex):
             and abs(ev.Electron_dxy[leptonIndex]) < 0.05 + 0.05 * (abs(ev.Electron_eta[leptonIndex]) > 1.479)
             and abs(ev.Electron_dz[leptonIndex]) < 0.10 + 0.10 * (abs(ev.Electron_eta[leptonIndex]) > 1.479)
             and ((abs(ev.Electron_eta[leptonIndex]) < 1.444) or (abs(ev.Electron_eta[leptonIndex]) > 1.566))
-            and abs(ev.Electron_eta[leptonIndex]) < 2.5
-        )
+            and abs(ev.Electron_eta[leptonIndex]) < 2.5)
+
+def passes_jet_cuts(ev, jetIndex):
+        return (
+            ev.Jet_pt[jetIndex] > 60)
+
+#calculates dphi between leading lepton and leading jet
+def dPhi(obj_phi, jet_phi):
+    dphi = obj_phi - jet_phi
+    dphi = np.arccos(np.cos(dphi))
+    return dphi
 
 def deltaR(eta1, phi1, eta2, phi2):
     """Compute the deltaR between two particles."""
@@ -213,6 +228,36 @@ for iFile in inputFiles:
          # If no valid lepton found, continue to the next event
          if highest_pt_lepton_index == -1:
              continue
+
+         #finds leading jet
+         highest_jet_pt = -1
+         highest_jet_pt_index = -1
+         for jetIndex in range(ev.nJet):
+             if passes_jet_cuts(ev, jetIndex):
+                 if ev.Jet_pt[jetIndex] > highest_jet_pt:
+                     highest_jet_pt = ev.Jet_pt[jetIndex]
+                     highest_jet_pt_index = jetIndex
+
+         if highest_jet_pt_index == -1:
+            continue
+
+         #calculate dphi between jet and lepton and veto it <1.5
+         lepton_phi = getattr(ev, lepton + "_phi")[highest_pt_lepton_index]
+         jet_phi = ev.Jet_phi[highest_jet_pt_index]
+         dphi_lepJet = dPhi(lepton_phi, jet_phi)
+         if dphi_lepJet < 1.5:
+            continue
+
+         #MET cuts
+         passmetCut = ev.MET_pt >= offlineCuts["MET"]
+         if passmetCut:
+             jet_phi = ev.Jet_phi[highest_jet_pt_index]
+             met_phi = ev.MET_phi
+             dphi_metJet = dPhi(met_phi, jet_phi)
+             if dphi_metJet < 1.5:
+                 continue
+
+         jetIndex = highest_jet_pt_index
          leptonIndex = highest_pt_lepton_index
 
          lepton_eta = getattr(ev, lepton + "_eta")[highest_pt_lepton_index]
@@ -234,7 +279,6 @@ for iFile in inputFiles:
 
 
          # Variables you want to study
-         passmetCut = ev.MET_pt >= offlineCuts["MET"]
          passlepCut = getattr(ev, lepton + "_pt")[leptonIndex] >= offlineCuts["lep1pt"]
          dphi = ((getattr(ev, lepton + "_phi")[leptonIndex]) - ev.MET_phi)
          mT = (2 * (getattr(ev, lepton + "_pt")[leptonIndex]) *  (ev.MET_pt) * (1 - np.cos(dphi))) ** 0.5
