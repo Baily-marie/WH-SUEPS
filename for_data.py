@@ -248,7 +248,7 @@ for iFile in inputFiles:
         iEv += 1
         if iEv % 1000 == 0:
             print(f"{iEv}/{nEv} events in file processed")
-        if(iEv % 100000 == 0): break
+#        if(iEv % 100000 == 0): break
 
         # Apply reference cuts for data early
         if data == "data" and not passRefCut(ev, era, lumi_mask_func):
@@ -258,13 +258,8 @@ for iFile in inputFiles:
         # Check if any HLT path is true early on
         passHLT = False
         for hltpath in hlt:
-            if hasattr(ev, hltpath):
-                if getattr(ev, hltpath, False):
-                    passHLT = True
-                    hlt_path_status[hltpath] += 1
-        if not passHLT:
-            continue
-        events_remaining_after_hlt_cut += 1
+             if getattr(ev, hltpath, False): passHLT = True
+
 
         highest_pt = -1
         highest_pt_lepton_index = -1
@@ -408,9 +403,6 @@ for iFile in inputFiles:
                             histos[var + "_num"].Fill(fillvar)
 
     print(f"Events remaining after passRefCut: {events_remaining_after_ref_cut}/{nEv}")
-    print(f"Events remaining after passHLT: {events_remaining_after_hlt_cut}/{nEv}")
-    for hltpath, count in hlt_path_status.items():
-        print(f"Events passing HLT path {hltpath}: {count}")
     print(f"Events passing lepton cuts: {lepton_cut_passed}")
     print(f"Events with leading lepton found: {leading_lepton_found}")
     print(f"Events with leading jet found: {leading_jet_found}")
